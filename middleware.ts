@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getManifestData } from "@/manifest";
 
 export const config = {
   matcher: ["/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)"],
@@ -13,11 +12,10 @@ export default async function middleware(req: NextRequest) {
       ? hostname?.replace(`.${process.env.DOMAIN}`, "")
       : hostname?.replace(`.localhost:3000`, "");
 
-  const subdomainData = await getManifestData(currentHost);
   // Prevent security issues – users should not be able to canonically access
   // the pages/sites folder and its respective contents. This can also be done
   // via rewrites to a custom 404 page
-  if (pathname.startsWith(`/_sites`) || !subdomainData) {
+  if (pathname.startsWith(`/_sites`)) {
     return new Response(null, { status: 404 });
   }
   if (
@@ -27,7 +25,6 @@ export default async function middleware(req: NextRequest) {
     const response = NextResponse.next();
     // rewrite to the current hostname under the pages/sites folder
     // the main logic component will happen in pages/sites/index.tsx
-
     return NextResponse.rewrite(`${origin}/_sites/${currentHost}${pathname}`);
   }
 }
