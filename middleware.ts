@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHostnameDataOrDefault } from "@/manifest";
+import { getManifestData } from "@/manifest";
 
 export const config = {
   matcher: ["/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)"],
@@ -10,16 +10,14 @@ export default async function middleware(req: NextRequest) {
 
   const currentHost =
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1"
-      ? hostname?.replace(`.jengermann.design`, "")
+      ? hostname?.replace(`.${process.env.DOMAIN}`, "")
       : hostname?.replace(`.localhost:3000`, "");
 
-  console.log(currentHost);
-  const subdomainData = await getHostnameDataOrDefault(currentHost);
-  console.log(subdomainData);
+  const subdomainData = await getManifestData(currentHost);
   // Prevent security issues – users should not be able to canonically access
   // the pages/sites folder and its respective contents. This can also be done
   // via rewrites to a custom 404 page
-  if (pathname.startsWith(`/_sites`)) {
+  if (pathname.startsWith(`/_sites`) || !subdomainData) {
     return new Response(null, { status: 404 });
   }
   if (
